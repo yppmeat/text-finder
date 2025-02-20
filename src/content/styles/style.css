@@ -1,0 +1,8 @@
+/* これらもインポートされる */
+@import 'tailwindcss/preflight';
+@tailwind utilities;
+
+/* これは適用される */
+.bg-orange {
+  background-color: orange;
+}
