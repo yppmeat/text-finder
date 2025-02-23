@@ -1,14 +1,14 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "manifest_version": 3,
-  "name": "テスト",
+  "name": "テキストファインダー",
   "version": "1.0.0",
   "content_scripts": [
     {
-      "matches": ["*://www.youtube.com/*"],
-      "js": ["./src/content/index.tsx"]
+      "matches": ["*://vrchat.com/*"],
+      "js": ["./src/content/main.tsx"]
     }
   ],
   "permissions": [],
-  "host_permissions": ["<all_urls>"]
+  "host_permissions": ["*://localhost/*"]
 }
