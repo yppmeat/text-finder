@@ -13,10 +13,10 @@ export default class NodeFinder {
   }
 
   private static ignoreTags = new Set(['IFRAME', 'NOSCRIPT', 'SCRIPT', 'TEXTAREA']);
-  private nodes: INodeData[];
+  private nodes: Map<Element, INodeData>;
 
   private constructor() {
-    this.nodes = [];
+    this.nodes = new Map();
   }
 
   private getRoot(): HTMLElement | null {
@@ -24,14 +24,15 @@ export default class NodeFinder {
   }
 
   public findNodes(): INodeData[] {
-    this.nodes.length = 0;
+    this.nodes.clear();
+
     const root = this.getRoot();
     if (!root) return [];
 
     this.recursive(root);
 
     console.log(this.nodes);
-    return this.nodes;
+    return [...this.nodes.values()];
   }
 
   private recursive(node: Node): void {
@@ -99,7 +100,7 @@ export default class NodeFinder {
     const centerPos = this.calcCenterPos(node);
     const element = document.elementFromPoint(centerPos.x, centerPos.y);
     if (!element) return false;
-    
+
     return this.getAncestors(element).includes(node);
   }
 
@@ -131,8 +132,25 @@ export default class NodeFinder {
     }
   }
 
+  private addMetadata(metadata: INodeData): void {
+    const oldMetadata = this.nodes.get(metadata.target);
+    if (oldMetadata) {
+      const newMetadata: INodeData = {
+        target: oldMetadata.target,
+        title: metadata.title ?? oldMetadata.title,
+        placeholder: metadata.placeholder ?? oldMetadata.placeholder,
+        textContent: metadata.textContent ?? oldMetadata.textContent,
+        sizes:
+          metadata.sizes.length > oldMetadata.sizes.length ? metadata.sizes : oldMetadata.sizes,
+      };
+      this.nodes.set(metadata.target, newMetadata);
+    } else {
+      this.nodes.set(metadata.target, metadata);
+    }
+  }
+
   private addSVGTitleMetadata(svg: SVGElement, title: HTMLElement): void {
-    this.nodes.push({
+    this.addMetadata({
       target: svg,
       title: null,
       placeholder: null,
@@ -142,8 +160,8 @@ export default class NodeFinder {
   }
 
   private addTextMetadata(node: Text): void {
-    this.nodes.push({
-      target: node,
+    this.addMetadata({
+      target: node.parentElement!,
       title: null,
       placeholder: null,
       textContent: node.nodeValue,
@@ -152,7 +170,7 @@ export default class NodeFinder {
   }
 
   private addHTMLElementMetadata(node: HTMLElement): void {
-    this.nodes.push({
+    this.addMetadata({
       target: node,
       title: node.getAttribute('title'),
       placeholder: node.getAttribute('placeholder'),

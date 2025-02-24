@@ -6,7 +6,7 @@ export interface IRectangle {
 }
 
 export interface INodeData {
-  target: Text | HTMLElement | SVGElement;
+  target: HTMLElement | SVGElement;
   title: string | null;
   placeholder: string | null;
   textContent: string | null;

@@ -1,7 +1,7 @@
 // オーバレイの重なりから面積が一番小さい要素を選択して返す
 export default class OverlaySelector {
-  public static select(mouseX: number, mouseY: number): HTMLElement | null {
-    const elements = document.elementsFromPoint(mouseX, mouseY) as HTMLElement[];
+  public static select(root: Document | ShadowRoot, mouseX: number, mouseY: number): HTMLElement | null {
+    const elements = root.elementsFromPoint(mouseX, mouseY) as HTMLElement[];
     return this.selectOverlayBySize(this.filterOverlay(elements));
   }
 

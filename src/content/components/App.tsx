@@ -4,7 +4,7 @@ import { INodeData } from '../models/interfaces';
 import NodeFinder from '../models/NodeFinder';
 import NodeSelector from '../models/OverlaySelector';
 
-const OverlayContainer: React.FC = () => {
+const App: React.FC<{ shadowRoot: ShadowRoot }> = ({ shadowRoot }) => {
   const [nodes, setNodes] = useState<INodeData[]>([]);
   const [isVisible, setIsVisible] = useState(false);
   const [hoverGroupId, setHoverGroupId] = useState<number | null>(null);
@@ -25,12 +25,9 @@ const OverlayContainer: React.FC = () => {
       setIsVisible(false);
     });
   }, []);
-
-  function containerHoverHandler(event: React.MouseEvent): void {
-    console.log(event.target);
-    console.log(document.elementsFromPoint(event.clientX, event.clientY));
-    const overlay = NodeSelector.select(event.clientX, event.clientY);
-    console.log(overlay);
+  
+  function containerMouseMoveHandler(event: React.MouseEvent): void {
+    const overlay = NodeSelector.select(shadowRoot, event.clientX, event.clientY);
     if (!overlay) {
       setHoverGroupId(null);
     } else {
@@ -39,7 +36,7 @@ const OverlayContainer: React.FC = () => {
   }
 
   function containerClickHandler(event: React.MouseEvent): void {
-    const overlay = NodeSelector.select(event.clientX, event.clientY);
+    const overlay = NodeSelector.select(shadowRoot, event.clientX, event.clientY);
     if (!overlay) {
       setActiveGroupId(null);
     } else {
@@ -49,10 +46,8 @@ const OverlayContainer: React.FC = () => {
 
   return (
     <div
-      className={`w-full h-full fixed top-0 left-0 z-[9999] bg-white/15 ${
-        isVisible ? '' : 'hidden'
-      }`}
-      onMouseOver={containerHoverHandler}
+      className={`w-full h-full fixed bg-white/15 ${isVisible ? '' : 'hidden'}`}
+      onMouseMove={containerMouseMoveHandler}
       onClick={containerClickHandler}
     >
       {nodes.map((node, index) => (
@@ -80,4 +75,4 @@ const OverlayContainer: React.FC = () => {
   );
 };
 
-export default OverlayContainer;
+export default App;

@@ -27,15 +27,19 @@ export default class SizeCalculator {
   }
 
   private static validateDOMRects(rects: DOMRect[]): IRectangle[] {
-    return rects.map(this.validateDOMRect);
+    return rects.map(this.validateDOMRect.bind(this));
   }
 
   private static validateDOMRect(rect: DOMRect): IRectangle {
     return {
-      top: rect.top,
-      left: rect.left,
-      width: rect.width,
-      height: rect.height,
+      top: this.fixed(rect.top),
+      left: this.fixed(rect.left),
+      width: this.fixed(rect.width),
+      height: this.fixed(rect.height),
     };
+  }
+  
+  private static fixed(num: number): number {
+    return Math.floor(num * 1000) / 1000;
   }
 }

@@ -1,0 +1,34 @@
+diff --git a/node_modules/vite/dist/client/client.mjs b/node_modules/vite/dist/client/client.mjs
+index e5439ff..a3e6459 100644
+--- a/node_modules/vite/dist/client/client.mjs
++++ b/node_modules/vite/dist/client/client.mjs
+@@ -1042,8 +1042,11 @@ if ("document" in globalThis) {
+     sheetsMap.set(el.getAttribute("data-vite-dev-id"), el);
+   });
+ }
++/* Patched to place the styles inside a <template> to avoid conflicts with the original site's CSS. */
++const styles = document.createElement('template');
++styles.id = 'vite-styles';
++document.head.appendChild(styles);
+ const cspNonce = "document" in globalThis ? document.querySelector("meta[property=csp-nonce]")?.nonce : undefined;
+-let lastInsertedStyle;
+ function updateStyle(id, content) {
+   let style = sheetsMap.get(id);
+   if (!style) {
+@@ -1054,15 +1057,7 @@ function updateStyle(id, content) {
+     if (cspNonce) {
+       style.setAttribute("nonce", cspNonce);
+     }
+-    if (!lastInsertedStyle) {
+-      document.head.appendChild(style);
+-      setTimeout(() => {
+-        lastInsertedStyle = undefined;
+-      }, 0);
+-    } else {
+-      lastInsertedStyle.insertAdjacentElement("afterend", style);
+-    }
+-    lastInsertedStyle = style;
++    styles.appendChild(style);
+   } else {
+     style.textContent = content;
+   }
