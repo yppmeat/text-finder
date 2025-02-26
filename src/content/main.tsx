@@ -1,8 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import Styles from './components/Styles';
 import App from './components/App';
-import Panel from './components/Panel';
 import './styles/style.css';
 
 const root = document.createElement('div');
@@ -13,8 +11,6 @@ document.body.append(root);
 const shadowRoot = root.attachShadow({ mode: 'open' });
 createRoot(shadowRoot).render(
   <StrictMode>
-    <Styles />
-    <App shadowRoot={shadowRoot} />
-    <Panel />
+    <App shadowRoot={shadowRoot}/>
   </StrictMode>
 );

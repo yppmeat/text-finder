@@ -38,7 +38,7 @@ export default class SizeCalculator {
       height: this.fixed(rect.height),
     };
   }
-  
+
   private static fixed(num: number): number {
     return Math.floor(num * 1000) / 1000;
   }

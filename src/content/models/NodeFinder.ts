@@ -1,4 +1,4 @@
-import { INodeData } from './interfaces';
+import { INodeData, IRectangle } from './interfaces';
 import SizeCalculator from './SizeCalculator';
 
 interface IPosition {
@@ -13,7 +13,7 @@ export default class NodeFinder {
   }
 
   private static ignoreTags = new Set(['IFRAME', 'NOSCRIPT', 'SCRIPT', 'TEXTAREA']);
-  private nodes: Map<Element, INodeData>;
+  private nodes: Map<Node, INodeData>;
 
   private constructor() {
     this.nodes = new Map();
@@ -39,8 +39,10 @@ export default class NodeFinder {
     if (node instanceof Text) {
       this.checkText(node);
     } else if (node instanceof HTMLElement) {
-      this.checkElement(node);
-      if (NodeFinder.ignoreTags.has(node.tagName)) {
+      const hasTextContent = this.isSingleText([...node.childNodes]);
+      this.checkElement(node, hasTextContent);
+
+      if (hasTextContent || NodeFinder.ignoreTags.has(node.tagName)) {
         return;
       }
 
@@ -52,9 +54,19 @@ export default class NodeFinder {
     }
   }
 
+  private isSingleText(nodes: Node[]): boolean {
+    const isContainsElement = nodes.some((node) => !(node instanceof Text));
+    if (isContainsElement) return false;
+
+    const textNodes = nodes.filter(
+      (node) => node instanceof Text && this.isNonEmptyString(node.nodeValue!)
+    );
+    return textNodes.length === 1;
+  }
+
   private checkText(node: Text): void {
     if (this.isNonEmptyString(node.nodeValue!) && this.checkVisible(node.parentElement!)) {
-      this.addNodeMetadata(node);
+      this.addTextMetadata(node);
     }
   }
 
@@ -62,9 +74,9 @@ export default class NodeFinder {
     return value.trim().length > 0;
   }
 
-  private checkElement(node: HTMLElement): void {
-    if (this.hasAttribute(node) && this.checkVisible(node)) {
-      this.addNodeMetadata(node);
+  private checkElement(node: HTMLElement, hasTextContent: boolean): void {
+    if (this.checkVisible(node) && (hasTextContent || this.hasAttribute(node))) {
+      this.addHTMLElementMetadata(node, hasTextContent);
     }
   }
 
@@ -124,14 +136,6 @@ export default class NodeFinder {
     };
   }
 
-  private addNodeMetadata(node: Node): void {
-    if (node instanceof Text) {
-      this.addTextMetadata(node);
-    } else if (node instanceof HTMLElement) {
-      this.addHTMLElementMetadata(node);
-    }
-  }
-
   private addMetadata(metadata: INodeData): void {
     const oldMetadata = this.nodes.get(metadata.target);
     if (oldMetadata) {
@@ -140,8 +144,7 @@ export default class NodeFinder {
         title: metadata.title ?? oldMetadata.title,
         placeholder: metadata.placeholder ?? oldMetadata.placeholder,
         textContent: metadata.textContent ?? oldMetadata.textContent,
-        sizes:
-          metadata.sizes.length > oldMetadata.sizes.length ? metadata.sizes : oldMetadata.sizes,
+        sizes: [...oldMetadata.sizes, ...metadata.sizes],
       };
       this.nodes.set(metadata.target, newMetadata);
     } else {
@@ -161,7 +164,7 @@ export default class NodeFinder {
 
   private addTextMetadata(node: Text): void {
     this.addMetadata({
-      target: node.parentElement!,
+      target: node,
       title: null,
       placeholder: null,
       textContent: node.nodeValue,
@@ -169,12 +172,12 @@ export default class NodeFinder {
     });
   }
 
-  private addHTMLElementMetadata(node: HTMLElement): void {
+  private addHTMLElementMetadata(node: HTMLElement, hasTextContent: boolean): void {
     this.addMetadata({
       target: node,
       title: node.getAttribute('title'),
       placeholder: node.getAttribute('placeholder'),
-      textContent: null,
+      textContent: hasTextContent ? node.textContent : null,
       sizes: SizeCalculator.calculate(node),
     });
   }
